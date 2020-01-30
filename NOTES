@@ -1,0 +1,62 @@
+
+TODO:
+
+fix node.in naming, 'in' is reserved and breaks in safari
+cubic hermite spline
+
+//
+// - Implement methods for autogenerating tangents for hermite curves:
+//
+//   - Generate a quadratic Lagrange polynomial for the interior points and their neighboors, get
+//     the tangents from its derivative. Start and end tangents need to be given.
+// 
+//   - Use averaged difference between point and its neihboors, Start and end tangents need to be
+//     given.
+//
+//   - Clamped cubic spline (user specified start/end tangents).
+
+- Maybe use getClientBoundingRect() for better mouse coord handling?
+
+- Think about ditching logging infrastructure for debugging and use console.log instead, might be
+  crossbrowser: http://wiki.commonjs.org/wiki/Console
+
+- A curve should *always* have at least two nodes, do I need to verify this?
+
+- About automatic tangent generation:
+  - Seems most efficient if I just set a flag in Curve when operations are performed that should
+    trigger a recalculation of tangents, and only when eval() is called do I actually recalc them.
+    - However, since I will typically always redraw immediately after I adjust a control point /
+      manipulate nodes, I might as well just update tangents when node manipulation methods are
+      called.
+      - Then again it does happen a lot that updateTangents is called needlessly, ie. it is called
+        once or twice by the constructor and then twice again if load() (which calls setType and
+        setNodes which call updateTangents()) is called after that, like it is by CM
+        - Although actually updateTangents() is a noop when curve.type defaults to linear, but
+          still..
+
+
+- Allow rotation using CTRL+move
+  - calculate midpoint of curve (just use average of all points?)
+  - on mouse down, store normalized vector going from midpoint to mouse pos.
+  - on mouse move, get normalized vector going from midpoint to cur. mouse pos.
+    - get angle between the two vectors? use it to rotate all the points around the midpoint.
+    - if I do it in increments like with translation, I wonder if there could be precision problems.. 
+      - how can I do it without increments without complicating the code too much?
+    - since I have to rotate around an arbitrary point, I would need to translate midpoint to
+      origin, then rotate, then translate back.. 
+
+
+- Think about implementing direct curve selection, might be feasible, essentially can use the same
+  idea as drawing loop but instead of *drawing* line segments, check distance to pointer
+   - This may be computationally expensive (distance between point and line-segment)
+    - an optimized method could be to just eval the curve in short 'steps' and check distance
+      between given pos every time, but this can be very inaccurate (or would need a large amount of
+      steps), unless I eval using distance (which requires calculating arc lengths etc etc)
+  - Then again, it doesn't have to be super-accurate, picking distance could be pretty long
+  - Consider this again when I've implemented arclength calculating and/or optimal curve drawing
+    (without needing manual tweaking of steps).
+
+
+- Implement Curve.evalTangent*(), use it in addNode() for positioning newly inserted nodes? Also
+  useful later on when adding auto-tangents, I think
+
